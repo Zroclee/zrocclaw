@@ -1,15 +1,13 @@
 # UI 组件库应用
 
 ## UI 应用初始化
-
 1. 基于 Vite 初始化 UI 库
 ```bash
-cd packages
+cd apps
 pnpm create vite
-
 │
 ◇  Project name:
-│  ui
+│  web
 │
 ◇  Select a framework:
 │  Vue
@@ -20,31 +18,13 @@ pnpm create vite
 ◇  Install with pnpm and start now?
 │  No
 │
-◇  Scaffolding project in xxx/packages/ui
+◇  Scaffolding project in xxx/apps/web...
 │
 └  Done. Now run:
 
-  cd ui
+  cd web
   pnpm install
   pnpm dev
-```
-2. 配置 Vite 构建
-```typescript
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import path from "path";
-
-export default defineConfig({
-	plugins: [vue()],
-	build: {
-		lib: {
-			entry: path.resolve(__dirname, "src/index.ts"),
-			name: "@browserclaw/ui",
-			fileName: "@browserclaw/ui",
-		},
-	},
-});
-
 ```
 
 ## 初始化项目目录

@@ -58,14 +58,33 @@ pnpm add turbo --save-dev --workspace-root
 初始化过程请查看[core.md](core.md)
 3. docs 应用初始化
 初始化过程请查看[docs.md](docs.md)
+4. ui 组件库应用初始化
+初始化过程请查看[ui.md](ui.md)
 
 
+## 项目结构
 
-<!-- 3. 项目规划
+```
+browserclaw/
+├── apps
+│   ├── docs
+│   ├── gateway
+│   └── web
+├── packages
+│   ├── core
+│   └── ui
+├── package.json
+├── pnpm-workspace.yaml
+├── README.md
+└── turbo.json
+```
+
+项目说明
 - `apps` 目录：存放应用代码，每个应用都是一个独立的项目。
 - `packages` 目录：存放共享代码，这些代码可以被多个应用使用。
 其中
-- `apps/gateway`：网关项目，负责实现网关的功能。
-- `packages/core`：网关的核心代码，负责处理网关的业务逻辑。
-- `packages/utils`：网关的工具代码，负责提供一些通用的工具函数。
-- `packages/ui`：网关的 UI 代码，负责实现网关的用户界面。 -->
+- `apps/gateway`：网关项目，负责实现网关的功能。基于 Express + Typescript 实现。
+- `apps/web`：Web 项目，负责实现 Web 端的功能。基于 Vue + Typescript + Vite 实现。
+- `apps/docs`：文档项目，负责实现文档的功能。基于 VitePress 实现。
+- `packages/core`：网关的核心代码，负责处理网关的业务逻辑 。基于 Typescript + LangChain + Playwright 实现。
+- `packages/ui`：网关的 UI 代码，负责实现网关的用户界面。基于 Vue + Typescript + Vite 实现。
