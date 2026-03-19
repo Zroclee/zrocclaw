@@ -9,6 +9,18 @@
       "import": "./src/index.ts",
       "require": "./src/index.ts",
       "default": "./src/index.ts"
+    },
+    "./playwright": {
+      "types": "./src/playwright/index.ts",
+      "import": "./src/playwright/index.ts",
+      "require": "./src/playwright/index.ts",
+      "default": "./src/playwright/index.ts"
+    },
+    "./fileManager": {
+      "types": "./src/fileManager/index.ts",
+      "import": "./src/fileManager/index.ts",
+      "require": "./src/fileManager/index.ts",
+      "default": "./src/fileManager/index.ts"
     }
   },
   "scripts": {
