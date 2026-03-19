@@ -27,6 +27,15 @@ pnpm create vite
   pnpm dev
 ```
 
+## 依赖库
+- Vue 3
+- TypeScript
+- Vite
+- tailwindcss
+- vue-router
+- @browserclaw/ui
+- daisyui
+
 ## 初始化项目目录
 ```
 packages/core

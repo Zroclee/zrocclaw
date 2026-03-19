@@ -2,6 +2,7 @@
 import express from 'express';
 import cors from 'cors';                // 可选，如果需要跨域
 import helmet from 'helmet';            // 可选，安全头
+import configRouter from './routes/config';
 import dotenv from 'dotenv';
 
 dotenv.config(); // 加载 .env 文件
@@ -17,6 +18,9 @@ app.use(express.json());                // 解析 JSON 请求体
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// 配置路由
+app.use('/config', configRouter);
 
 // 静态文件服务：将 Vue 打包后的 dist 目录挂载到根路径
 // 注意：生产环境才使用静态文件服务，开发时通常由 Vite 自己处理

@@ -88,3 +88,10 @@ browserclaw/
 - `apps/docs`：文档项目，负责实现文档的功能。基于 VitePress 实现。
 - `packages/core`：网关的核心代码，负责处理网关的业务逻辑 。基于 Typescript + LangChain + Playwright 实现。
 - `packages/ui`：网关的 UI 代码，负责实现网关的用户界面。基于 Vue + Typescript + Vite 实现。
+
+
+## 参考
+
+- [turbo 文档](https://turbo.build/docs/getting-started)
+- [vitepress 文档](https://vitepress.dev/guide/getting-started)
+- [vite 文档](https://vitejs.cn/vite3-cn/guide/)

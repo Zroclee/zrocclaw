@@ -3,10 +3,10 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".vite/**"]
+      "outputs": ["dist/**"]
     },
     "docs#build": {
-      "outputs": []
+      "outputs": [".vitepress/dist/**"]
     },
     "dev": {
       "persistent": true,
