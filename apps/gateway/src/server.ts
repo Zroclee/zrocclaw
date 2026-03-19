@@ -1,7 +1,7 @@
 // src/server.ts
 import app from './app';
 
-const PORT = process.env.PORT || 18302;
+const PORT = 18302;
 
 app.listen(PORT, () => {
   console.log(`Gateway is running at http://localhost:${PORT}`);
