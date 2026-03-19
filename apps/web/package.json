@@ -5,11 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc -b && vite build && rm -rf ../gateway/src/static && cp -R dist ../gateway/src/static",
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.30"
+    "@tailwindcss/vite": "^4.2.2",
+    "daisyui": "^5.5.19",
+    "markdown-it": "^14.1.1",
+    "tailwindcss": "^4.2.2",
+    "vue": "^3.5.30",
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
     "@types/node": "^24.12.0",
