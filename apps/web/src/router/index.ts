@@ -8,6 +8,11 @@ const router = createRouter({
       name: 'Welcome',
       component: () => import('../views/Welcome.vue'),
     },
+    {
+      path: '/chat',
+      name: 'Chat',
+      component: () => import('../views/Chat.vue'),
+    },
   ],
 });
 
