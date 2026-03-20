@@ -263,11 +263,11 @@ pnpm run start
 pnpm run build
 node dist/server.js
 
-lsof -i:3000
+lsof -i:18302
 # 输出
 # COMMAND  PID USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
-# node     12345 zroc   13u  IPv4  12345      0t0  TCP *:3000 (LISTEN)
-kill -9 12345
+# node     xxxxx zroc   13u  IPv4  xxxx     0t0  TCP *:18302 (LISTEN)
+kill -9 xxxx
 ```
 
 

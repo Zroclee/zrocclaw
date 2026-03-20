@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick } from 'vue';
+import { fetchEventSource } from '@microsoft/fetch-event-source';
 import Header from '../components/Chat/Header.vue';
 import Bubble from '../components/Chat/Bubble.vue';
 import Input from '../components/Chat/Input.vue';
+import request from '../api/request';
 
 interface Message {
   id: string;
@@ -16,12 +18,12 @@ const messages = ref<Message[]>([]);
 const inputValue = ref('');
 const isGenerating = ref(false);
 const messageListRef = ref<HTMLElement | null>(null);
-const myES = ref<EventSource | null>(null);
+const abortController = ref<AbortController | null>(null);
 
 // 生成唯一 ID
 const generateId = () => crypto.randomUUID();
 
-const curChatId = ref(generateId()); // 每个会话生成一个唯一 ID
+const curChatId = ref(''); // 每个会话生成一个唯一 ID
 
 // 滚动到底部
 const scrollToBottom = async () => {
@@ -33,21 +35,39 @@ const scrollToBottom = async () => {
 
 // 关闭 SSE
 const closeSSE = () => {
-  if (myES.value) {
-    myES.value.close();
-    myES.value = null;
+  if (abortController.value) {
+    abortController.value.abort();
+    abortController.value = null;
   }
   isGenerating.value = false;
 };
 
+// 获取或创建会话 ID
+const fetchSessionId = async (isNew: boolean = false) => {
+  try {
+    const params = isNew ? { new: true } : {};
+    const data: any = await request.get('/chat/session', { params });
+    
+    if (data.sessionId) {
+      curChatId.value = data.sessionId;
+    } else {
+      curChatId.value = generateId();
+    }
+  } catch (error) {
+    console.error('获取会话ID失败:', error);
+    curChatId.value = generateId(); // 回退方案
+  }
+};
+
 // 发起真实流式请求
 const connectSSE = async (query: string) => {
-  if (myES.value) {
+  if (abortController.value) {
     console.log("SSE 已存在，请勿重复创建");
     return;
   }
 
   isGenerating.value = true;
+  abortController.value = new AbortController();
   
   // 1. 创建 AI 消息占位
   const aiMessageId = generateId();
@@ -64,86 +84,102 @@ const connectSSE = async (query: string) => {
   const currentMsg = messages.value[messages.value.length - 1];
 
   const baseURL = import.meta.env.DEV ? '/api' : '';
-  const url = `${baseURL}/chat/stream?query=${encodeURIComponent(query)}&thread_id=${curChatId.value}`;
+  const url = `${baseURL}/chat/stream`;
   console.log("🔗 连接 SSE:", url);
 
-  const es = new EventSource(url);
+  try {
+    await fetchEventSource(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query: query,
+        thread_id: curChatId.value
+      }),
+      signal: abortController.value.signal,
+      onopen(response) {
+        if (response.ok) {
+          console.log("✅ SSE 连接已建立");
+          return Promise.resolve();
+        }
+        return Promise.reject(new Error(`请求失败: ${response.status}`));
+      },
+      onmessage(event) {
+        try {
+          const data = JSON.parse(event.data);
 
-  es.onopen = () => {
-    console.log("✅ SSE 连接已建立");
-  };
+          // 收到消息后取消 loading 状态
+          if (currentMsg.loading) {
+            currentMsg.loading = false;
+          }
 
-  es.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-
-      // 收到消息后取消 loading 状态
-      if (currentMsg.loading) {
-        currentMsg.loading = false;
-      }
-      // console.log("📥 收到 SSE 数据:", data);
-
-      switch (data.event_type) {
-        case "llm_start":
-          console.log("🤖 AI 开始生成:", data.content);
-          break;
-        case "llm_content":
-          currentMsg.content += data.content;
-          break;
-        case "llm_end":
-          console.log("✅ 大模型生成完成");
-          break;
-        case "tool_call_start":
-          console.log("🔧 调用工具:", data.tool_name, data.tool_args);
-          // 可以在这里提示用户正在调用某个工具
-          currentMsg.content += `\n\n> 正在调用工具: ${data.tool_name}...\n`;
-          break;
-        case "tool_output":
-          console.log("📤 工具返回:", data.content);
-          // 这里可根据业务需要触发EventBus
-          break;
-        case "tool_call_end":
-          console.log("✅ 工具调用完成");
-          break;
-        case "stream_end":
-          console.log("🏁 流结束:", data.content);
+          switch (data.event_type) {
+            case "llm_start":
+              console.log("🤖 AI 开始生成:", data.content);
+              break;
+            case "llm_content":
+              currentMsg.content += data.content;
+              break;
+            case "llm_end":
+              console.log("✅ 大模型生成完成");
+              break;
+            case "tool_call_start":
+              console.log("🔧 调用工具:", data.tool_name, data.tool_args);
+              currentMsg.content += `\n\n> 正在调用工具: ${data.tool_name}...\n`;
+              break;
+            case "tool_output":
+              console.log("📤 工具返回:", data.content);
+              break;
+            case "tool_call_end":
+              console.log("✅ 工具调用完成");
+              break;
+            case "stream_end":
+              console.log("🏁 流结束:", data.content);
+              closeSSE();
+              break;
+            case "error":
+              console.error("❌ 错误:", data.content);
+              currentMsg.content += `\n\n[出错: ${data.content}]`;
+              closeSSE();
+              break;
+            default:
+              break;
+          }
+          scrollToBottom();
+        } catch (error) {
+          console.error("❌ 解析 SSE 数据失败:", error, "Raw data:", event.data);
           closeSSE();
-          break;
-        case "error":
-          console.error("❌ 错误:", data.content);
-          currentMsg.content += `\n\n[出错: ${data.content}]`;
-          closeSSE();
-          break;
-        default:
-          break;
+        }
+      },
+      onclose() {
+        console.log("🏁 SSE 连接关闭");
+        closeSSE();
+      },
+      onerror(err) {
+        console.error("❌ SSE error:", err);
+        if (currentMsg.loading) {
+          currentMsg.loading = false;
+          currentMsg.content += "（连接中断）";
+        }
+        closeSSE();
+        throw err; // 防止 fetchEventSource 自动重连
       }
-      scrollToBottom();
-    } catch (error) {
-      console.error("❌ 解析 SSE 数据失败:", error, "Raw data:", event.data);
-      closeSSE();
-    }
-  };
-
-  es.onerror = (error) => {
-    console.error("❌ SSE error:", error);
-    if (currentMsg.loading) {
-      currentMsg.loading = false;
-      currentMsg.content += "（连接中断）";
-    }
+    });
+  } catch (err) {
+    console.error("Fetch SSE 发生异常", err);
     closeSSE();
-  };
-
-  myES.value = es;
+  }
 };
 
 // 开启新对话
-const startNewChat = () => {
+const startNewChat = async () => {
   if (isGenerating.value) {
     closeSSE();
   }
   messages.value = [];
   inputValue.value = '';
-  curChatId.value = generateId();
+  await fetchSessionId(true);
 };
 
 // 提交消息处理
@@ -166,8 +202,8 @@ const handleSubmit = async (text: string) => {
 };
 
 // 初始化欢迎消息
-onMounted(() => {
-
+onMounted(async () => {
+  await fetchSessionId();
 });
 </script>
 

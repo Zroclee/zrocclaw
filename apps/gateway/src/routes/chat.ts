@@ -3,6 +3,9 @@ import { browser_stream_invoke } from '@browserclaw/core/agents'
 import { getConfigPath } from '@browserclaw/core/fileManager';
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
+import sessionModel from '../models/session';
+
 const configDir = getConfigPath();
 const configFilePath = path.join(configDir, 'model.json');
 
@@ -13,13 +16,13 @@ router.get('/', (req, res) => {
   res.json({ status: "OK" });
 });
 
-router.get('/stream', async (req, res) => {
+router.post('/stream', async (req, res) => {
   try {
-    const query = req.query.query as string;
-    const thread_id = req.query.thread_id as string;
+    const query = req.body.query as string;
+    const thread_id = req.body.thread_id as string;
     
     if (!query || !thread_id) {
-      return res.status(400).json({ error: "Missing query or thread_id" });
+      return res.status(400).json({ error: "Missing query or thread_id in request body" });
     }
 
     const configContent = await fs.readFile(configFilePath, 'utf-8');
@@ -49,6 +52,16 @@ router.get('/stream', async (req, res) => {
       res.end();
     }
   }
+});
+
+router.get('/session', (req, res) => {
+  const isNew = req.query.new === 'true';
+  let sessionId = sessionModel.getSessionId();
+  if (!sessionId || isNew) {
+    sessionId = crypto.randomUUID();
+    sessionModel.setSessionId(sessionId);
+  }
+  res.json({ sessionId });
 });
 
 export default router;

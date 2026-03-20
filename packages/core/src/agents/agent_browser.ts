@@ -1,6 +1,7 @@
 import { ChatOpenAI } from "@langchain/openai";
 import { createAgent, createMiddleware } from "langchain";
 import { HumanMessage } from "@langchain/core/messages";
+import { MemorySaver } from "@langchain/langgraph";
 import { getCurrentTimeTool } from "./tools/common";
 import { fileOperationsTool } from "./tools/file_tool";
 import {
@@ -28,6 +29,8 @@ const getModel = (modelConfig: ModelConfig) => {
   return model;
 };
 
+const checkpointer = new MemorySaver();
+
 const streamInvoke = async function* (
   query: string,
   thread_id: string,
@@ -39,6 +42,7 @@ const streamInvoke = async function* (
     tools: [getCurrentTimeTool, fileOperationsTool, extractPageStateTool, executePlaywrightActionsTool],
     systemPrompt: PLAYWRIGHT_PROMPT,
     middleware: [],
+    checkpointer: checkpointer,
   });
   try {
     const stream = await agent.stream(
@@ -57,8 +61,7 @@ const streamInvoke = async function* (
         }
       }
       if (stream_mode === "updates") {
-        // 后续这里做数据保存
-        continue;
+        console.log('updates', chunk);
       }
     }
 

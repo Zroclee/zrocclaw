@@ -2,31 +2,32 @@
   "name": "@browserclaw/core",
   "private": true,
   "version": "0.0.0",
-  "main": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./src/index.ts",
-      "import": "./src/index.ts",
-      "require": "./src/index.ts",
-      "default": "./src/index.ts"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
     },
     "./playwright": {
       "types": "./src/playwright/index.ts",
-      "import": "./src/playwright/index.ts",
-      "require": "./src/playwright/index.ts",
-      "default": "./src/playwright/index.ts"
+      "import": "./dist/playwright.js",
+      "require": "./dist/playwright.cjs",
+      "default": "./dist/playwright.js"
     },
     "./fileManager": {
       "types": "./src/fileManager/index.ts",
-      "import": "./src/fileManager/index.ts",
-      "require": "./src/fileManager/index.ts",
-      "default": "./src/fileManager/index.ts"
+      "import": "./dist/fileManager.js",
+      "require": "./dist/fileManager.cjs",
+      "default": "./dist/fileManager.js"
     },
     "./agents": {
       "types": "./src/agents/index.ts",
-      "import": "./src/agents/index.ts",
-      "require": "./src/agents/index.ts",
-      "default": "./src/agents/index.ts"
+      "import": "./dist/agents.js",
+      "require": "./dist/agents.cjs",
+      "default": "./dist/agents.js"
     }
   },
   "scripts": {
@@ -36,6 +37,7 @@
   },
   "dependencies": {
     "@langchain/core": "^1.1.34",
+    "@langchain/langgraph": "^1.2.4",
     "@langchain/openai": "^1.3.0",
     "langchain": "^1.2.35",
     "playwright": "^1.58.2",
