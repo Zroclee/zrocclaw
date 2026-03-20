@@ -15,7 +15,7 @@ export default defineConfig({
 			fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
 		},
 		rollupOptions: {
-			external: [/^@langchain/, 'langchain', 'playwright', 'zod', 'os', 'path', 'fs'],
+			external: [/^@langchain/, 'langchain', 'playwright', 'zod', 'os', 'path', 'fs', 'fs/promises', 'node:fs/promises', 'node:path', 'node:fs', 'node:os'],
 		}
 	},
 });

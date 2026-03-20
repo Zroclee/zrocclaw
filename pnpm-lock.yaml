@@ -119,7 +119,7 @@ importers:
         specifier: ^1.3.0
         version: 1.3.0(@langchain/core@1.1.34(openai@6.32.0(zod@4.3.6)))
       langchain:
-        specifier: ^1.2.35
+        specifier: ^1.2.32
         version: 1.2.35(@langchain/core@1.1.34(openai@6.32.0(zod@4.3.6)))(openai@6.32.0(zod@4.3.6))(vue@3.5.30(typescript@5.9.3))
       playwright:
         specifier: ^1.58.2

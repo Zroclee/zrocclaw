@@ -16,15 +16,12 @@ const messages = ref<Message[]>([]);
 const inputValue = ref('');
 const isGenerating = ref(false);
 const messageListRef = ref<HTMLElement | null>(null);
+const myES = ref<EventSource | null>(null);
 
-// 模拟返回的内容库
-const mockResponses = [
-  "你好！我是 BrowserClaw 助手。这是一个模拟的流式输出响应。",
-  "我已经收到你的消息。作为一个智能助手，我可以帮你处理各种任务。",
-  "这里有一段代码示例：\n```javascript\nfunction hello() {\n  console.log('Hello World!');\n}\n```\n你可以随时向我提问！",
-  "这个问题很有意思。在 Vue 3 中，我们通常使用 `ref` 或 `reactive` 来管理响应式状态。",
-  "好的，我会继续为你提供帮助。还有什么我可以效劳的吗？"
-];
+// 生成唯一 ID
+const generateId = () => crypto.randomUUID();
+
+const curChatId = ref(generateId()); // 每个会话生成一个唯一 ID
 
 // 滚动到底部
 const scrollToBottom = async () => {
@@ -34,30 +31,119 @@ const scrollToBottom = async () => {
   }
 };
 
-// 模拟流式输出
-const simulateStream = async (messageId: string, fullContent: string) => {
-  const msgIndex = messages.value.findIndex(m => m.id === messageId);
-  if (msgIndex === -1) return;
+// 关闭 SSE
+const closeSSE = () => {
+  if (myES.value) {
+    myES.value.close();
+    myES.value = null;
+  }
+  isGenerating.value = false;
+};
 
-  // 移除 loading 状态，准备开始输出文本
-  messages.value[msgIndex].loading = false;
-  
-  const chars = fullContent.split('');
-  let currentText = '';
-
-  for (let i = 0; i < chars.length; i++) {
-    // 模拟网络延迟和打字效果 (10ms - 50ms)
-    const delay = Math.random() * 40 + 10;
-    await new Promise(resolve => setTimeout(resolve, delay));
-    
-    currentText += chars[i];
-    messages.value[msgIndex].content = currentText;
-    
-    // 每次更新内容时尝试滚动到底部
-    scrollToBottom();
+// 发起真实流式请求
+const connectSSE = async (query: string) => {
+  if (myES.value) {
+    console.log("SSE 已存在，请勿重复创建");
+    return;
   }
 
-  isGenerating.value = false;
+  isGenerating.value = true;
+  
+  // 1. 创建 AI 消息占位
+  const aiMessageId = generateId();
+  const aiMessage = {
+    id: aiMessageId,
+    role: 'assistant' as const,
+    content: "",
+    loading: true,
+  };
+  messages.value.push(aiMessage);
+  scrollToBottom();
+
+  // 提前在外部获取响应式引用（注意：JS 数组不支持 [-1]，使用 length - 1）
+  const currentMsg = messages.value[messages.value.length - 1];
+
+  const baseURL = import.meta.env.DEV ? '/api' : '';
+  const url = `${baseURL}/chat/stream?query=${encodeURIComponent(query)}&thread_id=${curChatId.value}`;
+  console.log("🔗 连接 SSE:", url);
+
+  const es = new EventSource(url);
+
+  es.onopen = () => {
+    console.log("✅ SSE 连接已建立");
+  };
+
+  es.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      // 收到消息后取消 loading 状态
+      if (currentMsg.loading) {
+        currentMsg.loading = false;
+      }
+      // console.log("📥 收到 SSE 数据:", data);
+
+      switch (data.event_type) {
+        case "llm_start":
+          console.log("🤖 AI 开始生成:", data.content);
+          break;
+        case "llm_content":
+          currentMsg.content += data.content;
+          break;
+        case "llm_end":
+          console.log("✅ 大模型生成完成");
+          break;
+        case "tool_call_start":
+          console.log("🔧 调用工具:", data.tool_name, data.tool_args);
+          // 可以在这里提示用户正在调用某个工具
+          currentMsg.content += `\n\n> 正在调用工具: ${data.tool_name}...\n`;
+          break;
+        case "tool_output":
+          console.log("📤 工具返回:", data.content);
+          // 这里可根据业务需要触发EventBus
+          break;
+        case "tool_call_end":
+          console.log("✅ 工具调用完成");
+          break;
+        case "stream_end":
+          console.log("🏁 流结束:", data.content);
+          closeSSE();
+          break;
+        case "error":
+          console.error("❌ 错误:", data.content);
+          currentMsg.content += `\n\n[出错: ${data.content}]`;
+          closeSSE();
+          break;
+        default:
+          break;
+      }
+      scrollToBottom();
+    } catch (error) {
+      console.error("❌ 解析 SSE 数据失败:", error, "Raw data:", event.data);
+      closeSSE();
+    }
+  };
+
+  es.onerror = (error) => {
+    console.error("❌ SSE error:", error);
+    if (currentMsg.loading) {
+      currentMsg.loading = false;
+      currentMsg.content += "（连接中断）";
+    }
+    closeSSE();
+  };
+
+  myES.value = es;
+};
+
+// 开启新对话
+const startNewChat = () => {
+  if (isGenerating.value) {
+    closeSSE();
+  }
+  messages.value = [];
+  inputValue.value = '';
+  curChatId.value = generateId();
 };
 
 // 提交消息处理
@@ -65,7 +151,7 @@ const handleSubmit = async (text: string) => {
   if (!text.trim() || isGenerating.value) return;
 
   // 1. 添加用户消息
-  const userMsgId = Date.now().toString();
+  const userMsgId = generateId();
   messages.value.push({
     id: userMsgId,
     role: 'user',
@@ -75,32 +161,13 @@ const handleSubmit = async (text: string) => {
   inputValue.value = ''; // 清空输入框
   scrollToBottom();
   
-  // 2. 添加助手占位消息 (loading 状态)
-  isGenerating.value = true;
-  const assistantMsgId = (Date.now() + 1).toString();
-  messages.value.push({
-    id: assistantMsgId,
-    role: 'assistant',
-    content: '',
-    loading: true
-  });
-  scrollToBottom();
-
-  // 3. 模拟网络请求延迟
-  await new Promise(resolve => setTimeout(resolve, 600));
-
-  // 4. 随机选择一段回复并开始流式输出
-  const randomResponse = mockResponses[Math.floor(Math.random() * mockResponses.length)];
-  await simulateStream(assistantMsgId, randomResponse);
+  // 2. 发起 SSE 请求
+  await connectSSE(text);
 };
 
 // 初始化欢迎消息
 onMounted(() => {
-  messages.value.push({
-    id: 'welcome-msg',
-    role: 'assistant',
-    content: '你好！我是 **BrowserClaw**。欢迎来到聊天界面，请问有什么我可以帮您的？'
-  });
+
 });
 </script>
 
@@ -149,21 +216,18 @@ onMounted(() => {
           :loading="isGenerating"
           :disabled="isGenerating"
           autofocus
-          placeholder="给 BrowserClaw 发送消息..."
+          placeholder="给 BrowserClaw 发送消息... (按 Enter 发送，Shift + Enter 换行)"
           @submit="handleSubmit"
         >
           <!-- 这里可以演示使用 extra 插槽放置一些辅助按钮，如上传图片等 -->
           <template #extra>
-             <button class="btn btn-ghost btn-xs btn-circle text-base-content/50" title="Attach file">
+             <button class="btn btn-ghost btn-xs btn-circle text-base-content/50" title="新对话" @click="startNewChat">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M18.375 12.739l-7.693 7.693a4.5 4.5 0 01-6.364-6.364l10.94-10.94A3 3 0 1119.5 7.372L8.552 18.32m.009-.01l-.01.01m5.699-9.941l-7.81 7.81a1.5 1.5 0 002.112 2.13" />
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
              </button>
           </template>
         </Input>
-        <div class="text-center text-[10px] text-base-content/40 mt-2">
-          按 Enter 发送，Shift + Enter 换行
-        </div>
       </div>
     </div>
   </div>

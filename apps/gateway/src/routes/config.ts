@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { getConfigPath } from '@browserclaw/core/fileManager';
-import { PlaywrightManager } from '@browserclaw/core/playwright';
 import fs from 'fs/promises';
 import path from 'path';
 
@@ -63,11 +62,6 @@ router.post('/model', async (req, res) => {
     console.error('修改模型失败:', error);
     res.status(500).json({ error: '修改模型失败' });
   }
-});
-
-router.get('/playwright', async (req, res) => {
-  const page = await PlaywrightManager.getInstance().getPage();
-  res.json({ playwrightPath: "启动playwright成功" });
 });
 
 export default router;

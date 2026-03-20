@@ -1,4 +1,2 @@
-const streamInvoke = async (query: string, thread_id: string) => {
-
-}
-export { streamInvoke };
+import { streamInvoke as browser_stream_invoke } from "./agent_browser";
+export { browser_stream_invoke };

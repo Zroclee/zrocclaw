@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors"; // 可选，如果需要跨域
 import helmet from "helmet"; // 可选，安全头
 import configRouter from "./routes/config";
+import chatRouter from "./routes/chat";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -22,6 +23,7 @@ app.get("/health", (req, res) => {
 
 // 配置路由
 app.use("/config", configRouter);
+app.use("/chat", chatRouter);
 
 // 静态文件服务：将 Vue 打包后的 dist 目录挂载到根路径
 // 注意：生产环境才使用静态文件服务，开发时通常由 Vite 自己处理
