@@ -6,4 +6,7 @@ export default defineConfig({
   target: 'node18',
   clean: false, // 改为false，避免清理掉 gateway 复制过来的文件
   bundle: true,
+  env: {
+    NODE_ENV: 'production',
+  },
 });

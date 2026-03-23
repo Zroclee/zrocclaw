@@ -86,7 +86,7 @@ zrocclaw/
 - `apps/gateway`：网关项目，负责实现网关的功能。基于 Express + Typescript 实现。
 - `apps/web`：Web 项目，负责实现 Web 端的功能。基于 Vue + Typescript + Vite 实现。
 - `apps/docs`：文档项目，负责实现文档的功能。基于 VitePress 实现。
-- `packages/core`：网关的核心代码，负责处理网关的业务逻辑 。基于 Typescript + LangChain + Playwright 实现。
+- `packages/core`：网关的核心代码，负责处理网关的业务逻辑 。基于 tsup + Typescript + LangChain + Playwright 实现。
 - `packages/ui`：网关的 UI 代码，负责实现网关的用户界面。基于 Vue + Typescript + Vite 实现。
 
 
