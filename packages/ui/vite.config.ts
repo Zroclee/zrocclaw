@@ -10,5 +10,8 @@ export default defineConfig({
 			name: "@zrocclaw/ui",
 			fileName: "@zrocclaw/ui",
 		},
+		rollupOptions: {
+			external: ['vue'],
+		}
 	},
 });

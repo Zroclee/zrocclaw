@@ -1,15 +1,15 @@
 {
   "name": "gateway",
   "version": "1.0.0",
-  "description": "",
+  "description": "ZrocClaw Gateway Service",
   "main": "src/server.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon src/server.ts",
-    "build": "tsc"
+    "build": "tsup"
   },
   "keywords": [],
-  "author": "",
+  "author": "ZrocLee",
   "license": "ISC",
   "packageManager": "pnpm@10.30.3",
   "dependencies": {
@@ -27,6 +27,7 @@
     "@types/node": "^25.5.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   }
 }
