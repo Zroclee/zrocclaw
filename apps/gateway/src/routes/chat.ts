@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import { browser_stream_invoke } from '@browserclaw/core/agents'
-import { getConfigPath } from '@browserclaw/core/fileManager';
+import { browser_stream_invoke } from '@zrocclaw/core/agents'
+import { getConfigPath } from '@zrocclaw/core/fileManager';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';

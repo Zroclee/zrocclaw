@@ -66,10 +66,10 @@ pnpm vitepress init
 import { defineConfig } from "vitepress";
 
 export default defineConfig({
-  base: "/browserclaw/", // 这里的路径是配置站点部署的公共基础路径
+  base: "/zrocclaw/", // 这里的路径是配置站点部署的公共基础路径
   ignoreDeadLinks: true,  // VitePress打包极其严格，如果链接不存在会打包报错，前期先忽略，等项目完善后再开启
-  title: "BrowserClaw Docs",
-  description: "BrowserClaw 是一个个人专属浏览器AI助手",
+  title: "zrocclaw Docs",
+  description: "zrocclaw 是一个个人专属浏览器AI助手",
 });
 ```
 

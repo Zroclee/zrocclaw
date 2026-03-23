@@ -33,7 +33,7 @@ pnpm create vite
 - Vite
 - tailwindcss
 - vue-router
-- @browserclaw/ui
+- @zrocclaw/ui
 - daisyui
 
 ## 初始化项目目录

@@ -2,10 +2,10 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
-  base: '/browserclaw/',
+  base: '/zrocclaw/',
   ignoreDeadLinks: true,
-  title: "BrowserClaw Docs",
-  description: "BrowserClaw 是一个个人专属浏览器AI助手",
+  title: "ZrocClaw Docs",
+  description: "ZrocClaw 是一个个人专属浏览器AI助手",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [

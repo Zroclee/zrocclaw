@@ -1,13 +1,13 @@
 # 初始化项目
 
-## github
-[browserclaw仓库地址] https://github.com/Zroclee/browserclaw
+## github 仓库
+[ZrocClaw仓库地址] https://github.com/Zroclee/zrocclaw
 
 ## Monorepo 初始化
 1. 克隆项目
 ```bash
-git clone https://github.com/Zroclee/browserclaw.git
-cd browserclaw
+git clone https://github.com/Zroclee/zrocclaw.git
+cd zrocclaw
 ```
 2. pnpm 初始化
 ```bash
@@ -65,7 +65,7 @@ pnpm add turbo --save-dev --workspace-root
 ## 项目结构
 
 ```
-browserclaw/
+zrocclaw/
 ├── apps
 │   ├── docs
 │   ├── gateway

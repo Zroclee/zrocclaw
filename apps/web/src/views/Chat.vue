@@ -211,7 +211,7 @@ onMounted(async () => {
   <div class="flex flex-col h-screen bg-base-200">
     <!-- 头部 -->
     <Header 
-      title="BrowserClaw Chat" 
+      title="ZrocClaw Chat" 
       @logo-click="console.log('logo clicked')" 
       @title-click="console.log('title clicked')"
     >
@@ -238,7 +238,7 @@ onMounted(async () => {
         :align="msg.role === 'user' ? 'right' : 'left'"
       >
         <template #top>
-          {{ msg.role === 'user' ? 'You' : 'BrowserClaw' }}
+          {{ msg.role === 'user' ? 'You' : 'ZrocClaw' }}
         </template>
       </Bubble>
     </div>
@@ -252,7 +252,7 @@ onMounted(async () => {
           :loading="isGenerating"
           :disabled="isGenerating"
           autofocus
-          placeholder="给 BrowserClaw 发送消息... (按 Enter 发送，Shift + Enter 换行)"
+          placeholder="给 ZrocClaw 发送消息... (按 Enter 发送，Shift + Enter 换行)"
           @submit="handleSubmit"
         >
           <!-- 这里可以演示使用 extra 插槽放置一些辅助按钮，如上传图片等 -->

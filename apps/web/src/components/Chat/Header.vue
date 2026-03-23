@@ -6,7 +6,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  title: 'BrowserClaw',
+  title: 'ZrocClaw',
   logo: ''
 });
 

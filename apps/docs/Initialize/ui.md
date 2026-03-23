@@ -39,8 +39,8 @@ export default defineConfig({
 	build: {
 		lib: {
 			entry: path.resolve(__dirname, "src/index.ts"),
-			name: "@browserclaw/ui",
-			fileName: "@browserclaw/ui",
+			name: "@zrocclaw/ui",
+			fileName: "@zrocclaw/ui",
 		},
 	},
 });

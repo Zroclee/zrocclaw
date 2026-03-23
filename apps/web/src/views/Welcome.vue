@@ -6,7 +6,7 @@
   <div class="hero min-h-screen bg-base-200">
     <div class="hero-content text-center">
       <div class="max-w-md">
-        <h1 class="text-5xl font-bold text-primary">BrowserClaw</h1>
+        <h1 class="text-5xl font-bold text-primary">ZrocClaw</h1>
         <p class="py-6 text-lg">
           您的个人专属浏览器 AI 助手。
           <br />

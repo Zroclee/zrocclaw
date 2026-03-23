@@ -1,4 +1,4 @@
-import { getConfigPath } from '@browserclaw/core/fileManager';
+import { getConfigPath } from '@zrocclaw/core/fileManager';
 import fs from 'fs';
 import path from 'path';
 

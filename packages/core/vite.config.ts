@@ -10,7 +10,7 @@ export default defineConfig({
 				fileManager: path.resolve(__dirname, "src/fileManager/index.ts"),
 				agents: path.resolve(__dirname, "src/agents/index.ts"),
 			},
-			name: "@browserclaw/core",
+			name: "@zrocclaw/core",
 			formats: ["es", "cjs"],
 			fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
 		},
