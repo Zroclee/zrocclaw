@@ -3,10 +3,10 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 /**
- * 获取 BrowserClaw 的根目录 (~/.browserclaw)
+ * 获取 ZrocClaw 的根目录 (~/.zrocclaw)
  */
 export function getBasePath(): string {
-  const basePath = path.join(os.homedir(), '.browserclaw');
+  const basePath = path.join(os.homedir(), '.zrocclaw');
   if (!fs.existsSync(basePath)) {
     fs.mkdirSync(basePath, { recursive: true });
   }
@@ -50,7 +50,7 @@ function resolveAndEnsurePath(baseDir: string, subPath?: string): string {
 }
 
 /**
- * 获取配置目录 (~/.browserclaw/config)
+ * 获取配置目录 (~/.zrocclaw/config)
  * @param subPath 可选的子路径，用于拼接在 config 目录下
  * @returns 完整的配置文件或目录路径
  */
@@ -60,7 +60,7 @@ export function getConfigPath(subPath?: string): string {
 }
 
 /**
- * 获取工作空间目录 (~/.browserclaw/workspace)
+ * 获取工作空间目录 (~/.zrocclaw/workspace)
  * @param subPath 可选的子路径，用于拼接在 workspace 目录下
  * @returns 完整的工作空间文件或目录路径
  */
@@ -68,3 +68,14 @@ export function getWorkspacePath(subPath?: string): string {
   const workspacePath = path.join(getBasePath(), 'workspace');
   return resolveAndEnsurePath(workspacePath, subPath);
 }
+
+/**
+ * 获取记忆存储目录 (~/.zrocclaw/workspace/memory)
+ * @param subPath 可选的子路径，用于拼接在 memory 目录下
+ * @returns 完整的记忆文件或目录路径
+ */
+export function getMemoryPath(subPath?: string): string {
+  const memoryPath = path.join(getWorkspacePath(), 'memory');
+  return resolveAndEnsurePath(memoryPath, subPath);
+}
+

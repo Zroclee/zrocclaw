@@ -8,7 +8,7 @@ import {
   extractPageStateTool,
   executePlaywrightActionsTool,
 } from "./tools/browser";
-import { PLAYWRIGHT_PROMPT } from './prompts/main' 
+import { PLAYWRIGHT_PROMPT } from './prompts/browser' 
 import { StreamEvent, StreamEventType } from "./stream";
 
 interface ModelConfig {
@@ -31,6 +31,17 @@ const getModel = (modelConfig: ModelConfig) => {
 
 const checkpointer = new MemorySaver();
 
+const memoryMiddleware = createMiddleware({
+  name: "MemoryMiddleware",
+  beforeAgent: async ({ messages }) => {
+    console.log('beforeAgent', messages);
+  },
+  afterAgent: async ({ messages }) => {
+    console.log('afterAgent', messages);
+  },
+});
+
+
 const streamInvoke = async function* (
   query: string,
   thread_id: string,
@@ -41,7 +52,7 @@ const streamInvoke = async function* (
     model: model,
     tools: [getCurrentTimeTool, fileOperationsTool, extractPageStateTool, executePlaywrightActionsTool],
     systemPrompt: PLAYWRIGHT_PROMPT,
-    middleware: [],
+    middleware: [memoryMiddleware],
     checkpointer: checkpointer,
   });
   try {
@@ -61,10 +72,9 @@ const streamInvoke = async function* (
         }
       }
       if (stream_mode === "updates") {
-        console.log('updates', chunk);
+        // console.log('updates', chunk);
       }
     }
-
     yield 'data: ' + StreamEvent.createEndEvent() + '\n\n';
   } catch (error) {
     const errorEvent = new StreamEvent({
