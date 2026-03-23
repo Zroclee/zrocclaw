@@ -8,6 +8,9 @@
     "build": "vue-tsc -b && vite build && rm -rf ../gateway/src/static && cp -R dist ../gateway/src/static",
     "preview": "vite preview"
   },
+  "peerDependencies": {
+    "vue": "^3.5.30"
+  },
   "dependencies": {
     "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^1.13.6",
