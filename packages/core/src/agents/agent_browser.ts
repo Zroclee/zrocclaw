@@ -3,7 +3,13 @@ import { createAgent, createMiddleware } from "langchain";
 import { HumanMessage } from "@langchain/core/messages";
 import { MemorySaver } from "@langchain/langgraph";
 import { getCurrentTimeTool } from "./tools/common";
-import { fileOperationsTool } from "./tools/file_tool";
+import {
+  createFileTool,
+  readFileTool,
+  writeFileTool,
+  deleteFileTool,
+  listFilesTool,
+} from "./tools/file_tool";
 import {
   extractPageStateTool,
   executePlaywrightActionsTool,
@@ -50,7 +56,16 @@ const streamInvoke = async function* (
   const model = getModel(modelConfig);
   const agent = createAgent({
     model: model,
-    tools: [getCurrentTimeTool, fileOperationsTool, extractPageStateTool, executePlaywrightActionsTool],
+    tools: [
+      getCurrentTimeTool,
+      createFileTool,
+      readFileTool,
+      writeFileTool,
+      deleteFileTool,
+      listFilesTool,
+      extractPageStateTool,
+      executePlaywrightActionsTool
+    ],
     systemPrompt: PLAYWRIGHT_PROMPT,
     middleware: [memoryMiddleware],
     checkpointer: checkpointer,

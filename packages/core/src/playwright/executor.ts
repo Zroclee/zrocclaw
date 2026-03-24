@@ -33,12 +33,12 @@ export class PlaywrightExecutor {
   public async executeActions(
     response: AgentActionResponse,
   ): Promise<{ success: boolean; error?: string; stoppedAtStep?: number }> {
-    console.log(
-      `[Executor] Starting task: ${response.task_id} - ${response.plan_summary}`,
-    );
+    // console.log(
+    //   `[Executor] Starting task: ${response.task_id} - ${response.plan_summary}`,
+    // );
 
     for (const action of response.actions) {
-      console.log(`[Executor] Step ${action.step}: ${action.intent}`);
+      // console.log(`[Executor] Step ${action.step}: ${action.intent}`);
       try {
         await this.performAction(action);
 

@@ -72,7 +72,8 @@ program
             return;
           }
           console.log(`✅ ZrocClaw 服务已通过 PM2 在后台启动 (进程名: ${PM2_APP_NAME})`);
-          console.log(`🌍 请在浏览器访问体验，默认端口请参考网关配置。`);
+          console.log(`🌍 前往对话：http://127.0.0.1:18302/web/#/chat`);
+          console.log(`🔍 点击 http://127.0.0.1:18302/health 服务是否正常`);
         });
       });
     });

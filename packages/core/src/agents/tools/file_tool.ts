@@ -29,93 +29,179 @@ const resolveSafePath = (relativePath: string): string => {
   return absolutePath;
 };
 
-export const fileOperationsTool = tool(
-  async ({ action, filePath, content }) => {
-    // 特殊处理 list 根目录的情况（允许 filePath 为 '.' 或 '/' 等，但在 resolveSafePath 会报错，这里做下兼容）
-    let targetPath: string;
-    if (action === 'list' && (filePath === '.' || filePath === '/' || filePath === '')) {
-      targetPath = getWorkspacePath();
-    } else {
-      targetPath = resolveSafePath(filePath);
-    }
-
+export const createFileTool = tool(
+  async ({ filePath, content, isDirectory }) => {
+    const targetPath = resolveSafePath(filePath);
     try {
-      switch (action) {
-        case 'create': {
-          await fs.mkdir(path.dirname(targetPath), { recursive: true });
-          await fs.writeFile(targetPath, content || '', { encoding: 'utf-8', flag: 'wx' });
-          return JSON.stringify({
-            success: true,
-            operation: 'create_file',
-            filePath,
-          });
-        }
-        case 'read': {
-          const fileContent = await fs.readFile(targetPath, 'utf-8');
-          return JSON.stringify({
-            success: true,
-            operation: 'read_file',
-            filePath,
-            content: fileContent,
-          });
-        }
-        case 'write': {
-          const stat = await fs.stat(targetPath);
-          if (!stat.isFile()) {
-            throw new Error('目标路径不是文件');
-          }
-          await fs.writeFile(targetPath, content || '', { encoding: 'utf-8' });
-          return JSON.stringify({
-            success: true,
-            operation: 'write_file',
-            filePath,
-          });
-        }
-        case 'delete': {
-          const stat = await fs.stat(targetPath);
-          if (stat.isDirectory()) {
-            await fs.rm(targetPath, { recursive: true, force: true });
-          } else {
-            await fs.unlink(targetPath);
-          }
-          return JSON.stringify({
-            success: true,
-            operation: 'delete_file',
-            filePath,
-          });
-        }
-        case 'list': {
-          const entries = await fs.readdir(targetPath, { withFileTypes: true });
-          const files = entries.map(entry => ({
-            name: entry.name,
-            isDirectory: entry.isDirectory(),
-          }));
-          return JSON.stringify({
-            success: true,
-            operation: 'list_files',
-            filePath,
-            files,
-          });
-        }
-        default:
-          throw new Error(`不支持的文件操作类型: ${action}`);
+      const hasExtension = path.extname(filePath) !== '';
+      const shouldCreateDir = isDirectory || (!hasExtension && !content);
+
+      if (shouldCreateDir) {
+        await fs.mkdir(targetPath, { recursive: true });
+        return JSON.stringify({
+          success: true,
+          operation: 'create_directory',
+          filePath,
+        });
+      } else {
+        await fs.mkdir(path.dirname(targetPath), { recursive: true });
+        await fs.writeFile(targetPath, content || '', { encoding: 'utf-8', flag: 'wx' });
+        return JSON.stringify({
+          success: true,
+          operation: 'create_file',
+          filePath,
+        });
       }
     } catch (error: any) {
       return JSON.stringify({
         success: false,
-        operation: action,
+        operation: 'create',
         filePath,
         error: error.message,
       });
     }
   },
   {
-    name: 'file_operations',
-    description: '在工作目录内执行文件或目录操作。支持操作：create(新建文件), read(读取文件), write(覆盖写入文件), delete(删除文件或目录), list(列出目录下文件)。注意：filePath必须是相对工作目录的路径。',
+    name: 'create_file_or_directory',
+    description: '在工作目录内新建文件或目录。注意：filePath必须是相对工作目录的路径。',
     schema: z.object({
-      action: z.enum(['create', 'read', 'write', 'delete', 'list']).describe('要执行的文件操作类型'),
-      filePath: z.string().describe('相对工作目录的文件或目录路径（读取根目录列表可传 "."）'),
-      content: z.string().optional().describe('文件内容（仅在 create 或 write 操作时需要提供）'),
+      filePath: z.string().describe('相对工作目录的文件或目录路径'),
+      content: z.string().optional().describe('文件内容'),
+      isDirectory: z.boolean().optional().describe('是否创建目录（为 true 时创建目录）'),
+    }),
+  }
+);
+
+export const readFileTool = tool(
+  async ({ filePath }) => {
+    const targetPath = resolveSafePath(filePath);
+    try {
+      const fileContent = await fs.readFile(targetPath, 'utf-8');
+      return JSON.stringify({
+        success: true,
+        operation: 'read_file',
+        filePath,
+        content: fileContent,
+      });
+    } catch (error: any) {
+      return JSON.stringify({
+        success: false,
+        operation: 'read',
+        filePath,
+        error: error.message,
+      });
+    }
+  },
+  {
+    name: 'read_file',
+    description: '在工作目录内读取文件。注意：filePath必须是相对工作目录的路径。',
+    schema: z.object({
+      filePath: z.string().describe('相对工作目录的文件路径'),
+    }),
+  }
+);
+
+export const writeFileTool = tool(
+  async ({ filePath, content }) => {
+    const targetPath = resolveSafePath(filePath);
+    try {
+      const stat = await fs.stat(targetPath);
+      if (!stat.isFile()) {
+        throw new Error('目标路径不是文件');
+      }
+      await fs.writeFile(targetPath, content || '', { encoding: 'utf-8' });
+      return JSON.stringify({
+        success: true,
+        operation: 'write_file',
+        filePath,
+      });
+    } catch (error: any) {
+      return JSON.stringify({
+        success: false,
+        operation: 'write',
+        filePath,
+        error: error.message,
+      });
+    }
+  },
+  {
+    name: 'write_file',
+    description: '在工作目录内覆盖写入已有文件。注意：filePath必须是相对工作目录的路径。',
+    schema: z.object({
+      filePath: z.string().describe('相对工作目录的文件路径'),
+      content: z.string().describe('要写入的文件内容'),
+    }),
+  }
+);
+
+export const deleteFileTool = tool(
+  async ({ filePath }) => {
+    const targetPath = resolveSafePath(filePath);
+    try {
+      const stat = await fs.stat(targetPath);
+      if (stat.isDirectory()) {
+        await fs.rm(targetPath, { recursive: true, force: true });
+      } else {
+        await fs.unlink(targetPath);
+      }
+      return JSON.stringify({
+        success: true,
+        operation: 'delete_file',
+        filePath,
+      });
+    } catch (error: any) {
+      return JSON.stringify({
+        success: false,
+        operation: 'delete',
+        filePath,
+        error: error.message,
+      });
+    }
+  },
+  {
+    name: 'delete_file_or_directory',
+    description: '在工作目录内删除文件或目录。注意：filePath必须是相对工作目录的路径。',
+    schema: z.object({
+      filePath: z.string().describe('相对工作目录的文件或目录路径'),
+    }),
+  }
+);
+
+export const listFilesTool = tool(
+  async ({ filePath }) => {
+    let targetPath: string;
+    if (filePath === '.' || filePath === '/' || filePath === '') {
+      targetPath = getWorkspacePath();
+    } else {
+      targetPath = resolveSafePath(filePath);
+    }
+
+    try {
+      const entries = await fs.readdir(targetPath, { withFileTypes: true });
+      const files = entries.map(entry => ({
+        name: entry.name,
+        isDirectory: entry.isDirectory(),
+      }));
+      return JSON.stringify({
+        success: true,
+        operation: 'list_files',
+        filePath,
+        files,
+      });
+    } catch (error: any) {
+      return JSON.stringify({
+        success: false,
+        operation: 'list',
+        filePath,
+        error: error.message,
+      });
+    }
+  },
+  {
+    name: 'list_files',
+    description: '列出工作目录内的目录内容。读取根目录列表可传 "."。',
+    schema: z.object({
+      filePath: z.string().describe('相对工作目录的目录路径（读取根目录列表可传 "."）'),
     }),
   }
 );
