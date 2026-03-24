@@ -9,5 +9,20 @@ export default defineConfig({
   env: {
     NODE_ENV: 'production',
   },
-  external: ['cors', 'dotenv', 'express', 'helmet', 'http-proxy-middleware'],
+  noExternal: ['@zrocclaw/core'],
+  external: [
+    'cors', 
+    'dotenv', 
+    'express', 
+    'helmet', 
+    'http-proxy-middleware',
+    'playwright',
+    'langchain',
+    '@langchain/core',
+    '@langchain/openai',
+    '@langchain/langgraph',
+    'zod',
+    'chromium-bidi'
+  ],
+  onSuccess: 'mkdir -p ../cli/server && cp dist/server.js ../cli/server/server.js',
 });
