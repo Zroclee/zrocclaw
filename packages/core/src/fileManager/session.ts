@@ -1,4 +1,4 @@
-import { getConfigPath } from './manager';
+import { getConfigPath, getHistoryPath } from './manager';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,6 +11,7 @@ export interface SessionDataItem extends Record<string, any> {
 interface SessionData {
   sessionId: string | null;
   sessionData: SessionDataItem[];
+  history: string[];
 }
 
 class SessionModel {
@@ -23,6 +24,7 @@ class SessionModel {
     this.data = {
       sessionId: null,
       sessionData: [],
+      history: [],
     };
     this.load();
   }
@@ -42,6 +44,7 @@ class SessionModel {
         this.data = {
           sessionId: parsed.sessionId ?? this.data.sessionId,
           sessionData: Array.isArray(parsed.sessionData) ? parsed.sessionData : [],
+          history: Array.isArray(parsed.history) ? parsed.history : [],
         };
       } catch (error) {
         console.error('Failed to parse session.json:', error);
@@ -85,6 +88,20 @@ class SessionModel {
   public addSessionItem(item: SessionDataItem): void {
     this.load();
     this.data.sessionData.push(item);
+    if (this.data.sessionData.length > 100) {
+      const sessionId = this.data.sessionId ?? 'session';
+      const index = (this.data.history?.length ?? 0) + 1;
+      const filename = `${sessionId}${index}.json`;
+      const historyFilePath = getHistoryPath(filename);
+      const toArchive = this.data.sessionData.slice(0, 70);
+      try {
+        fs.writeFileSync(historyFilePath, JSON.stringify(toArchive, null, 2), 'utf-8');
+        this.data.history.push(filename);
+        this.data.sessionData = this.data.sessionData.slice(70);
+      } catch (error) {
+        console.error('Failed to archive session history:', error);
+      }
+    }
     this.save();
   }
 }

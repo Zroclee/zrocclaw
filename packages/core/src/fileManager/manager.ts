@@ -79,3 +79,12 @@ export function getMemoryPath(subPath?: string): string {
   return resolveAndEnsurePath(memoryPath, subPath);
 }
 
+/**
+ * 获取历史记录目录 (~/.zrocclaw/config/history)
+ * @param subPath 可选的子路径，用于拼接在 history 目录下
+ * @returns 完整的历史记录文件或目录路径
+ */
+export function getHistoryPath(subPath?: string): string {
+  const historyPath = path.join(getConfigPath(), 'history');
+  return resolveAndEnsurePath(historyPath, subPath);
+}

@@ -1,4 +1,4 @@
-import {getBasePath, getConfigPath, getMemoryPath, getWorkspacePath} from './manager'
+import {getBasePath, getConfigPath, getMemoryPath, getWorkspacePath, getHistoryPath} from './manager'
 import sessionModel from './session'
 
-export {getBasePath, getConfigPath, getMemoryPath, getWorkspacePath, sessionModel}
+export {getBasePath, getConfigPath, getMemoryPath, getWorkspacePath, getHistoryPath, sessionModel}
