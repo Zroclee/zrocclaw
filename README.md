@@ -6,6 +6,40 @@
 
 本项目旨在打造一个属于你个人的浏览器 AI 助手，**模拟 OpenClaw 的核心能力**，为您提供一个可定制、可扩展、拥有本地化特征的私人智能终端。不仅支持日常对话问答，还能利用核心能力包（如 LangChain / Playwright）实现自我学习和生成技能。
 
+## 快速开始
+
+ZrocClaw 提供了便捷的命令行工具，支持一键安装与启停服务。详细的命令说明与日志排查请参考 [CLI 文档](./apps/cli/README.md)。
+
+### 安装
+
+推荐全局安装 ZrocClaw 命令行工具：
+
+```bash
+npm install -g zrocclaw
+```
+
+### 使用
+
+安装完成后，你可以通过 `zrocclaw` 命令来管理后台服务：
+
+- **启动服务**:
+  ```bash
+  zrocclaw start
+  ```
+  启动成功后，你可以通过以下地址访问服务：
+  - 💬 **对话界面**: [http://127.0.0.1:18302/web/#/chat](http://127.0.0.1:18302/web/#/chat)
+  - 🔍 **健康检查**: [http://127.0.0.1:18302/health](http://127.0.0.1:18302/health)
+
+- **停止服务**:
+  ```bash
+  zrocclaw stop
+  ```
+
+- **更新版本**:
+  ```bash
+  zrocclaw update
+  ```
+
 ## 项目架构
 
 本项目采用 **pnpm + Turborepo** 驱动的 Monorepo 架构，以确保模块的解耦、复用和高效构建。主要目录职责如下：
