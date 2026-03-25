@@ -156,7 +156,7 @@ const connectSSE = async (query: string) => {
               currentMsg.content += `\n\n> 正在调用工具: ${data.tool_name}...\n`;
               break;
             case "tool_output":
-              console.log("📤 工具返回:", data.content);
+              // console.log("📤 工具返回:", data.content);
               break;
             case "tool_call_end":
               console.log("✅ 工具调用完成");

@@ -30,6 +30,9 @@
     <!-- Content Area -->
     <div class="flex-1 p-6 overflow-y-auto">
       <ModelConfig v-if="currentConfig === 'model'" />
+      <ToBeContinue v-else-if="currentConfig === 'scheduler'" title="定时任务" />
+      <ToBeContinue v-else-if="currentConfig === 'skills'" title="技能配置" />
+      <ToBeContinue v-else-if="currentConfig === 'im'" title="IM渠道" />
     </div>
   </div>
 </template>
@@ -37,10 +40,14 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import ModelConfig from '../components/SubConfig/Model.vue';
+import ToBeContinue from '../components/SubConfig/ToBeContinue.vue';
 
 const currentConfig = ref('model');
 
 const configMenus = [
   { id: 'model', name: '大模型配置' },
+  { id: 'scheduler', name: '定时任务' },
+  { id: 'skills', name: '技能配置' },
+  { id: 'im', name: 'IM渠道' },
 ];
 </script>

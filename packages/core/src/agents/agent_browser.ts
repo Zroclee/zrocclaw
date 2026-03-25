@@ -62,8 +62,8 @@ const streamInvoke = async function* (
       // memoryMiddleware,
       summarizationMiddleware({
         model: model,
-        trigger: { tokens: 160000 },
-        keep: { messages: 30 },
+        trigger: { tokens: 10000 },
+        keep: { messages: 20 },
       }),
     ],
     checkpointer: checkpointer,
