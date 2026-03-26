@@ -14,10 +14,10 @@ export const PLAYWRIGHT_PROMPT = `
     *   **何时使用**: 根据用户指令生成操作计划并调用此工具。
 
 2.  **extract_page_state**:
-    *   **用途**: 获取当前页面上下文摘要，并在页面上标记可交互元素（Set-of-Mark）。
-    *   **输入**: 可选参数 \`includeText\` (布尔值)，用于额外获取当前视口内的纯文本信息。
-    *   **输出**: 包含页面 URL、Title 以及带有 ID 标记的可交互元素列表（开启 \`includeText\` 时还会包含视口内的纯文本信息）。
-    *   **何时使用**: 在需要理解页面结构或精确定位元素时使用。返回的元素 ID 可用于生成精确的 CSS 选择器（如 \`[idu-mark-id="123"]\`）。**注意：一般纯操作页面时不需要打开 \`includeText\` 开关，以免浪费宝贵的 Token。只有在确实需要获取页面更多文本信息进行内容理解时，才将 \`includeText\` 设为 true。**
+    *   **用途**: 获取当前页面上下文摘要，并在页面上标记可交互元素（Set-of-Mark）。同时提供当前打开的所有标签页(tabs)信息和当前激活的标签页索引(activeTabIndex)。
+    *   **输入**: 可选参数 \`includeText\` (字符串，"true" 或 "false")，用于额外获取当前视口内的纯文本信息。
+    *   **输出**: 包含页面 URL、Title、所有打开的标签页列表（tabs，包含索引、URL和Title）、当前激活标签页索引（activeTabIndex），以及带有 ID 标记的可交互元素列表（开启 \`includeText\` 时还会包含视口内的纯文本信息）。
+    *   **何时使用**: 在需要理解页面结构、精确定位元素，或了解当前打开了哪些标签页时使用。返回的元素 ID 可用于生成精确的 CSS 选择器（如 \`[idu-mark-id="123"]\`）。如果发现页面打开了新窗口，可结合 \`switchTab\` 动作切换到对应标签页。**注意：一般纯操作页面时不需要打开 \`includeText\` 开关，以免浪费宝贵的 Token。只有在确实需要获取页面更多文本信息进行内容理解时，才将 \`includeText\` 设为 true。**
 
 ### Utility
 3.  **get_current_time**:
@@ -93,7 +93,7 @@ interface BrowserAction {
   payload?: ActionPayload; // 动作参数
 }
 
-type ActionType = 'click' | 'fill' | 'press' | 'hover' | 'check' | 'selectOption' | 'wait' | 'goto';
+type ActionType = 'click' | 'fill' | 'press' | 'hover' | 'check' | 'selectOption' | 'wait' | 'goto' | 'switchTab';
 
 type LocatorStrategy = 
   | 'css'     // CSS 选择器
@@ -112,6 +112,7 @@ interface ActionPayload {
   delay?: number;      // 用于 wait (毫秒)
   options?: string[];  // 用于 selectOption
   url?: string;        // 用于 goto
+  tabIndex?: number;   // 用于 switchTab，指定要切换的标签页索引
 }
 \`\`\`
 

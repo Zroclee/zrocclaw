@@ -1,5 +1,6 @@
 import type { Page, Locator } from 'playwright';
 import { ActionLocator, BrowserAction, AgentActionResponse } from './types';
+import { playwrightManager } from './manager';
 
 export class PlaywrightExecutor {
   private page: Page;
@@ -103,6 +104,13 @@ export class PlaywrightExecutor {
       case 'wait':
         // 显式等待，例如等待动画完成
         await this.page.waitForTimeout(payload?.delay || 1000); //
+        break;
+      case 'switchTab':
+        if (payload?.tabIndex !== undefined) {
+          this.page = await playwrightManager.switchPage(payload.tabIndex);
+        } else {
+          throw new Error('switchTab action requires payload.tabIndex');
+        }
         break;
       default:
         throw new Error(`Unsupported action type: ${type as string}`);

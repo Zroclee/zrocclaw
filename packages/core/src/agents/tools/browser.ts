@@ -25,7 +25,7 @@ type InteractiveElement = {
  */
 export const extractPageStateTool = tool(
   async (input) => {
-    const includeText = input?.includeText ?? false;
+    const includeText = input?.includeText === 'true';
     const p = await playwrightManager.getPage();
     const evaluateResult = await p.evaluate((includeTextArg) => {
       document
@@ -153,10 +153,13 @@ export const extractPageStateTool = tool(
     }, includeText);
 
     const title = await p.title();
+    const pageMetadata = await playwrightManager.getPageMetadata();
 
     return {
       url: p.url(),
       title,
+      tabs: pageMetadata.tabs,
+      activeTabIndex: pageMetadata.activeTabIndex,
       elements: evaluateResult.metadata as InteractiveElement[],
       ...(includeText && evaluateResult.viewportText
         ? { text: evaluateResult.viewportText }
@@ -166,13 +169,13 @@ export const extractPageStateTool = tool(
   {
     name: 'extract_page_state',
     description:
-      '抓取当前页面的关键交互元素，并输出带编号的元素摘要与上下文摘要。可通过 includeText 参数额外获取视口内的纯文本信息。',
+      '抓取当前页面的关键交互元素，并输出带编号的元素摘要与上下文摘要，同时提供当前打开的所有标签页(tabs)信息和当前激活的标签页索引(activeTabIndex)。可通过 includeText 参数额外获取视口内的纯文本信息。',
     schema: z.object({
       includeText: z
-        .boolean()
+        .string()
         .optional()
-        .default(false)
-        .describe('是否获取当前视口内的纯文本信息'),
+        .default('false')
+        .describe('是否获取当前视口内的纯文本信息，传入字符串 "true" 或 "false"'),
     }),
   },
 );
@@ -209,6 +212,7 @@ export const executePlaywrightActionsTool = tool(
                 'selectOption',
                 'wait',
                 'goto',
+                'switchTab',
               ])
               .describe('动作类型'),
             target: z
@@ -226,6 +230,7 @@ export const executePlaywrightActionsTool = tool(
                 delay: z.number().optional(),
                 options: z.array(z.string()).optional(),
                 url: z.string().optional(),
+                tabIndex: z.number().optional().describe('用于 switchTab 动作，指定要切换的标签页索引'),
               })
               .optional()
               .describe('动作参数'),

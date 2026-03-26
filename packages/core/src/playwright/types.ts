@@ -18,7 +18,8 @@ export type ActionType =
   | 'check'
   | 'selectOption'
   | 'wait'
-  | 'goto';
+  | 'goto'
+  | 'switchTab';
 
 // 3. 定义动作载荷 (Payload)
 export interface ActionPayload {
@@ -27,6 +28,7 @@ export interface ActionPayload {
   delay?: number; // 用于 wait 动作的毫秒数
   options?: string[]; // 用于 selectOption 的多选
   url?: string; // 用于 goto 动作
+  tabIndex?: number; // 用于 switchTab 动作的标签页索引
 }
 
 // 4. 定义单个动作指令
