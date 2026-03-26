@@ -90,8 +90,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue';
-import { useConfigStore } from '../../store/config';
+import { ref, reactive, onMounted } from 'vue';
+import request from '../../api/request';
 
 interface ModelConfig {
   id: string;
@@ -101,14 +101,15 @@ interface ModelConfig {
   baseURL?: string;
 }
 
-const configStore = useConfigStore();
-const models = computed<ModelConfig[]>(() => {
-  return Array.isArray(configStore.modelData.models) ? configStore.modelData.models : [];
-});
+const models = ref<ModelConfig[]>([]);
+const defaultModel = ref<ModelConfig | null>(null);
 
-const defaultModel = computed<ModelConfig | null>(() => {
-  return configStore.modelData.defaultModel || null;
-});
+// API 接口定义
+const apiGetModel = () => request.get('/config/model');
+const apiAddModel = (data: Omit<ModelConfig, 'id'>) => request.post('/config/model', data);
+const apiEditModel = (data: ModelConfig) => request.post('/config/model/edit', data);
+const apiDeleteModel = (id: string) => request.post('/config/model/delete', { id });
+const apiSetDefaultModel = (id: string) => request.post('/config/model/default', { id });
 
 const modalRef = ref<HTMLDialogElement | null>(null);
 const isEditing = ref(false);
@@ -121,48 +122,27 @@ const formData = reactive<Omit<ModelConfig, 'id'>>({
   baseURL: '',
 });
 
-onMounted(async () => {
+const loadModels = async () => {
   try {
-    await configStore.fetchModel();
+    const res: any = await apiGetModel();
+    models.value = Array.isArray(res.models) ? res.models : [];
+    defaultModel.value = res.defaultModel || null;
   } catch (error) {
     console.error('Failed to fetch models config on mount', error);
   }
-});
-
-const saveToStore = async (updates: Record<string, any>) => {
-  try {
-    const payload = { ...updates };
-    
-    if (!('models' in payload)) {
-      payload.models = models.value;
-    }
-    if (!('defaultModel' in payload)) {
-      payload.defaultModel = defaultModel.value;
-    }
-
-    if (payload.models && payload.models.length > 0) {
-      if (payload.defaultModel) {
-        const existModel = payload.models.find((m: ModelConfig) => m.id === payload.defaultModel.id);
-        if (!existModel) {
-          payload.defaultModel = payload.models[0];
-        } else {
-          payload.defaultModel = existModel;
-        }
-      } else {
-        payload.defaultModel = payload.models[0];
-      }
-    } else {
-      payload.defaultModel = null;
-    }
-
-    await configStore.updateModel(payload);
-  } catch (error) {
-    console.error('Failed to update models config', error);
-  }
 };
 
+onMounted(() => {
+  loadModels();
+});
+
 const setDefaultModel = async (model: ModelConfig) => {
-  await saveToStore({ defaultModel: model });
+  try {
+    await apiSetDefaultModel(model.id);
+    await loadModels();
+  } catch (error) {
+    console.error('Failed to set default model', error);
+  }
 };
 
 const openModal = (model?: ModelConfig) => {
@@ -194,31 +174,30 @@ const resetForm = () => {
 };
 
 const saveModel = async () => {
-  const currentModels = [...models.value];
-
-  if (isEditing.value && editingId.value) {
-    const index = currentModels.findIndex(m => m.id === editingId.value);
-    if (index !== -1) {
-      currentModels[index] = {
+  try {
+    if (isEditing.value && editingId.value) {
+      await apiEditModel({
         id: editingId.value,
         ...formData,
-      };
+      });
+    } else {
+      await apiAddModel({ ...formData });
     }
-  } else {
-    currentModels.push({
-      id: crypto.randomUUID(),
-      ...formData,
-    });
+    await loadModels();
+    closeModal();
+  } catch (error) {
+    console.error('Failed to save model', error);
   }
-  
-  await saveToStore({ models: currentModels });
-  closeModal();
 };
 
 const deleteModel = async (id: string) => {
   if (confirm('确定要删除该模型配置吗？')) {
-    const newModels = models.value.filter(m => m.id !== id);
-    await saveToStore({ models: newModels });
+    try {
+      await apiDeleteModel(id);
+      await loadModels();
+    } catch (error) {
+      console.error('Failed to delete model', error);
+    }
   }
 };
 
