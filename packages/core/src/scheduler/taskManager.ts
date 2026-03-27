@@ -1,4 +1,4 @@
-import { getConfigPath } from '../fileManager';
+import { getWorkspacePath, getMemoryPath } from '../fileManager';
 import { promises as fs } from 'fs';
 import path from 'path';
 import crypto from 'crypto';
@@ -11,12 +11,20 @@ export interface TaskConfig {
   isActive: boolean;   // 是否启用
 }
 
+export interface TaskResultRecord {
+  id: string;
+  name: string;
+  message: string;
+  executeTime: string; // 任务执行具体时间（年月日时分秒）
+  result: string;      // 执行结果正文
+}
+
 export class TaskManager {
   /**
    * 获取任务配置文件的绝对路径
    */
   private get taskFilePath(): string {
-    return path.join(getConfigPath(), 'task.json');
+    return path.join(getWorkspacePath(), 'ScheduledTasks.json');
   }
 
   /**
@@ -121,6 +129,79 @@ export class TaskManager {
     // 保存
     await this.writeTasksFile(filteredTasks);
     return true;
+  }
+
+  /**
+   * 5. 保存定时任务执行结果
+   * @param taskId 任务ID
+   * @param result 执行结果正文
+   */
+  public async saveTaskResult(taskId: string, result: string): Promise<void> {
+    const tasks = await this.readTasksFile();
+    const task = tasks.find(t => t.id === taskId);
+
+    // 获取当前时间，格式化为 YYYY-MM-DD HH:mm:ss
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    const executeTime = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+    const record: TaskResultRecord = {
+      id: taskId,
+      name: task ? task.name : '未知任务',
+      message: task ? task.message : '',
+      executeTime,
+      result
+    };
+
+    const filePath = path.join(getMemoryPath(), `taskresults-${taskId}.json`);
+    let results: TaskResultRecord[] = [];
+
+    // 读取已有的结果文件
+    try {
+      await fs.access(filePath);
+      const data = await fs.readFile(filePath, 'utf-8');
+      if (data.trim()) {
+        results = JSON.parse(data) as TaskResultRecord[];
+      }
+    } catch (error: any) {
+      if (error.code !== 'ENOENT') {
+        throw error;
+      }
+      // 如果是 ENOENT，说明文件不存在，这里捕获异常并继续使用空数组 []
+    }
+
+    // 将新结果追加到数组
+    results.push(record);
+
+    // 确保目录存在
+    const dir = path.dirname(filePath);
+    await fs.mkdir(dir, { recursive: true });
+
+    // 写入文件
+    await fs.writeFile(filePath, JSON.stringify(results, null, 2), 'utf-8');
+  }
+
+  /**
+   * 6. 获取任务执行结果
+   * @param taskId 任务ID
+   * @returns 任务执行结果数组，如果文件不存在则返回 []
+   */
+  public async getTaskResults(taskId: string): Promise<TaskResultRecord[]> {
+    const filePath = path.join(getMemoryPath(), `taskresults-${taskId}.json`);
+    
+    try {
+      await fs.access(filePath);
+      const data = await fs.readFile(filePath, 'utf-8');
+      if (data.trim()) {
+        return JSON.parse(data) as TaskResultRecord[];
+      }
+      return [];
+    } catch (error: any) {
+      if (error.code === 'ENOENT') {
+        return []; // 文件不存在直接返回空数组，不创建文件
+      }
+      throw error;
+    }
   }
 }
 

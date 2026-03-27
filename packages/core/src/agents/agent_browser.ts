@@ -102,4 +102,54 @@ const streamInvoke = async function* (
     yield "data: " + errorEvent.toJson() + "\n\n";
   }
 };
-export { streamInvoke };
+
+const invoke = async (
+  query: string,
+  thread_id: string,
+  modelConfig: ModelConfig,
+) => {
+  const model = getModel(modelConfig);
+  const agent = createAgent({
+    model: model,
+    tools: [
+      getCurrentTimeTool,
+      createFileTool,
+      readFileTool,
+      writeFileTool,
+      deleteFileTool,
+      listFilesTool,
+      extractPageStateTool,
+      executePlaywrightActionsTool,
+    ],
+    systemPrompt: PLAYWRIGHT_PROMPT,
+    middleware: [
+      // memoryMiddleware,
+      summarizationMiddleware({
+        model: model,
+        trigger: { tokens: 10000 },
+        keep: { messages: 20 },
+      }),
+    ],
+    checkpointer: checkpointer,
+    store: store,
+  });
+  
+  try {
+    const result = await agent.invoke(
+      { messages: [new HumanMessage(query)] },
+      {
+        recursionLimit: 100,
+        configurable: { thread_id: thread_id },
+      },
+    );
+    
+    const messages = result?.messages || [];
+    const lastMessage = messages[messages.length - 1];
+    return lastMessage?.content || "";
+  } catch (error) {
+    console.error("Agent invoke error:", error);
+    throw error;
+  }
+};
+
+export { streamInvoke, invoke };

@@ -20,7 +20,16 @@ export class TaskScheduler {
       this.stopTask(task.id);
     }
 
-    const job = schedule.scheduleJob(task.cron, async () => {
+    // 兼容一次性任务传递进来的 ISO 日期字符串
+    let scheduleRule: string | Date | schedule.RecurrenceRule = task.cron;
+    if (typeof task.cron === 'string' && task.cron.includes('T') && task.cron.includes('Z')) {
+      const d = new Date(task.cron);
+      if (!isNaN(d.getTime())) {
+        scheduleRule = d;
+      }
+    }
+
+    const job = schedule.scheduleJob(scheduleRule, async () => {
       try {
         await task.handler();
       } catch (error) {

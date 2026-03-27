@@ -1,16 +1,9 @@
 import { Router } from 'express';
 import { browser_stream_invoke } from '@zrocclaw/core/agents'
-import { getConfigPath } from '@zrocclaw/core/fileManager';
-import fs from 'fs/promises';
-import path from 'path';
+import { getConfigPath, modelManager } from '@zrocclaw/core/fileManager';
 import crypto from 'crypto';
 import { sessionModel } from '@zrocclaw/core/fileManager';
 import { BusinessError } from '../middlewares/errorHandler';
-
-const configDir = getConfigPath();
-const configFilePath = path.join(configDir, 'model.json');
-
-
 
 const router = Router();
 router.get('/', (req, res) => {
@@ -26,9 +19,7 @@ router.post('/stream', async (req, res, next) => {
       throw new BusinessError(400, "Missing query or thread_id in request body");
     }
 
-    const configContent = await fs.readFile(configFilePath, 'utf-8');
-    const config = JSON.parse(configContent);
-    const modelConfig = config.defaultModel;
+    const modelConfig = await modelManager.getDefaultModel();
 
     if (!modelConfig) {
       throw new BusinessError(500, "defaultModel not found in config");

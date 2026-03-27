@@ -1,8 +1,35 @@
 import { Router } from 'express';
 import { taskManager, scheduler, TaskConfig } from '@zrocclaw/core/scheduler';
+import { browser_invoke } from '@zrocclaw/core/agents';
+import { modelManager } from '@zrocclaw/core/fileManager';
 import { BusinessError } from '../middlewares/errorHandler';
 
+
 const router = Router();
+
+async function executeAgentTask(taskId: string, taskName: string, message: string) {
+  try {
+    const modelConfig = await modelManager.getDefaultModel();
+    const threadId = `task-${taskId}`;
+
+    if (!modelConfig) {
+      console.error(`[Task Execution Error] defaultModel not found in config for task [${taskName}]`);
+      return;
+    }
+
+    console.log(`[Task Execution Start] 任务 [${taskName}] 开始执行，消息: ${message}`);
+    const result = await browser_invoke(message, threadId, modelConfig);
+    const resultStr = typeof result === 'string' ? result : JSON.stringify(result);
+    console.log(`[Task Execution Success] 任务 [${taskName}] 执行完成。结果: ${resultStr}`);
+    
+    // 保存执行结果
+    await taskManager.saveTaskResult(taskId, resultStr);
+  } catch (error) {
+    console.error(`[Task Execution Error] 任务 [${taskName}] 执行失败:`, error);
+    // 保存执行失败的结果
+    await taskManager.saveTaskResult(taskId, `执行失败: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
 
 // 1. 查询接口，GET，返回任务数组
 router.get('/', async (req, res) => {
@@ -32,8 +59,8 @@ router.post('/add', async (req, res) => {
       name: newTask.name,
       cron: newTask.cron,
       handler: async () => {
-        // 这里对接真正跑大模型的逻辑，临时用 console 代替
-        console.log(`[Task Execution] 任务 [${newTask.name}] 被触发，消息: ${newTask.message}`);
+        // 使用新建的函数统一调用
+        await executeAgentTask(newTask.id, newTask.name, newTask.message);
       }
     });
   }
@@ -61,7 +88,7 @@ router.post('/edit', async (req, res) => {
       name: updatedTask.name,
       cron: updatedTask.cron,
       handler: async () => {
-        console.log(`[Task Execution] 任务 [${updatedTask.name}] 被触发，消息: ${updatedTask.message}`);
+        await executeAgentTask(updatedTask.id, updatedTask.name, updatedTask.message);
       }
     });
   } else {
@@ -109,7 +136,7 @@ router.post('/toggle', async (req, res) => {
       name: updatedTask.name,
       cron: updatedTask.cron,
       handler: async () => {
-        console.log(`[Task Execution] 任务 [${updatedTask.name}] 被触发，消息: ${updatedTask.message}`);
+        await executeAgentTask(updatedTask.id, updatedTask.name, updatedTask.message);
       }
     });
   } else {
@@ -117,6 +144,18 @@ router.post('/toggle', async (req, res) => {
   }
 
   res.success(updatedTask, isActive ? '任务已激活并启动' : '任务已停止');
+});
+
+// 6. 获取任务执行结果，POST，参数任务ID
+router.post('/results', async (req, res) => {
+  const { id } = req.body;
+
+  if (!id) {
+    throw new BusinessError(400, '必须提供任务ID');
+  }
+
+  const results = await taskManager.getTaskResults(id);
+  res.success(results, '获取任务执行结果成功');
 });
 
 export default router;
